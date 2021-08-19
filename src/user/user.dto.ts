@@ -48,7 +48,7 @@ export class UpdateUserDto {
     username?: string
 }
 
-export class GetUserDto {
+export class GetUserDto{
     @IsString()
     name?: string
 
@@ -77,4 +77,10 @@ export class GetUserDto {
 
     @IsString()
     education?: string
+}
+
+export type ResModel = {
+    statusCode: number
+    data?: any
+    message: string
 }

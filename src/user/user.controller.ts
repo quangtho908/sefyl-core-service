@@ -6,21 +6,21 @@ import { UserService } from "./user.service";
 @Controller("user")
 export class UserController {
     constructor(
-        private userService: UserService
+        private userService: UserService,
     ) {}
 
-    @Get()
-    async getUser(@Param("username") username: string) {
+    @Get(":username")
+    async getUser(@Param("username") username: string): Promise<any> {
         return await this.userService.getUser(username);
     }
 
     @Put()
-    async update(@Body() data: UpdateUserDto) {
+    async update(@Body() data: UpdateUserDto): Promise<any> {
         return this.userService.update(data);
     }
 
     @Delete()
-    async delete(@Body("username") username: string) {
+    async delete(@Body("username") username: string): Promise<any> {
         return this.userService.delete(username)
     }
 }
