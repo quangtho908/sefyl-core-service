@@ -37,6 +37,12 @@ export class User {
 
     @Prop()
     education: string
+
+    @Prop()
+    avatar: string
+
+    @Prop({require: true})
+    role: string
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

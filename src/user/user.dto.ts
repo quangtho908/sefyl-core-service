@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString } from "class-validator";
-
+import { Role } from "src/role/role.enum";
 
 export class CreateUserDto {
     
@@ -46,6 +46,9 @@ export class UpdateUserDto {
 
     @IsString()
     username?: string
+
+    @IsString()
+    avatar?: string
 }
 
 export class GetUserDto{
@@ -79,8 +82,3 @@ export class GetUserDto{
     education?: string
 }
 
-export type ResModel = {
-    statusCode: number
-    data?: any
-    message: string
-}
