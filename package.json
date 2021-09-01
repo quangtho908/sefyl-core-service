@@ -30,6 +30,7 @@
     "cache-manager": "^3.4.4",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
+    "dotenv": "^10.0.0",
     "ioredis": "^4.27.8",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.13.5",
