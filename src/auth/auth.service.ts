@@ -1,7 +1,7 @@
 import { Injectable, NotAcceptableException, UnauthorizedException } from "@nestjs/common";
 import { sign } from "jsonwebtoken";
 import { ResModel, ReqUserModel } from "src/shared/base.model";
-import { env } from "src/shared/enviroment/enviroment";
+import { auth} from "src/shared/enviroment/enviroment";
 import { IoredisService } from "src/ioredis/ioredis.service";
 import { CreateUserDto } from "src/user/user.dto";
 import { UserService } from "src/user/user.service";
@@ -17,12 +17,12 @@ export class AuthService {
 
     async login(data: LoginDto): Promise<ResModel> {
         const {email, password} = data;
-        const checkAvaiable = await this.userService.findOne({email});
+        const checkAvaiable = await this.userService.findOneAsync({email});
         if(!checkAvaiable) throw new NotAcceptableException(`${email} is not avaiable`);
         await this.userService.compareHash(checkAvaiable.hash, password);
 
         const user = {id: checkAvaiable._id, role: checkAvaiable.role}
-        const {secret, expired, secretRefresh, expiredRefresh} = env.auth;
+        const {secret, expired, secretRefresh, expiredRefresh} = auth;
 
         const [access_token, refreshToken] = await Promise.all([
             sign(user, secret, {expiresIn: expired}),
@@ -40,8 +40,8 @@ export class AuthService {
     async register(data: CreateUserDto): Promise<ResModel> {
         const {username, email} = data;
         const [checkUsername, checkEmail] = await Promise.all([
-            this.userService.findOne({username}),
-            this.userService.findOne({email})
+            this.userService.findOneAsync({username}),
+            this.userService.findOneAsync({email})
         ])
         
         if(!!checkUsername) throw new NotAcceptableException(`${data.username} is avaiable`);
@@ -50,7 +50,7 @@ export class AuthService {
     }
 
     async refreshToken(user: ReqUserModel): Promise<ResModel> {
-        const {secret, expired} = env.auth;
+        const {secret, expired} = auth;
         const {id, role, refreshToken} = user;
         const checkRefresh = await this.ioredisService.getValue(user.id);
         if(!checkRefresh) throw new UnauthorizedException("End of login session, please login to continue");

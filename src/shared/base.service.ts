@@ -1,90 +1,200 @@
 import { InternalServerErrorException } from "@nestjs/common";
-import { EnforceDocument, Model, Query, Types, Document } from "mongoose";
-import { MongoError } from "mongodb";
-
+import { Error, FilterQuery, Model, Query, QueryOptions, SaveOptions, Types, UpdateQuery, UpdateWriteOpResult, Document } from "mongoose";
+import { DeleteResult } from "mongodb";
 
 export class BaseService<T extends Document> {
     constructor(
-        protected model?: Model<T>
+        protected _model: Model<T>
     ) {}
-
-    throwMongoError(err: MongoError): MongoError {
-        throw new InternalServerErrorException(err, err.errmsg)
+    
+    throwMongooseError(err: Error): Error{
+        throw new InternalServerErrorException(err);
     }
 
-    toObjectId(id: string): Types.ObjectId {
+    toObjectId(id: string){
         return Types.ObjectId(id);
     }
 
-    async findAll(filter = {}): Promise<Query<any, T>> {
-        try{
-            return await this.model.find(filter);
+    async findByIdAsync(
+        id: string | Types.ObjectId,
+        select?: string | string[] | {[feildname: string]: any},
+        options?: QueryOptions
+    ): Promise<T> {
+        try {
+            return await this._model.findById(id, select, options).lean();
         }catch(err) {
-            this.throwMongoError(err);
+            this.throwMongooseError(err);
         }
     }
 
-    async findById(id: string): Promise<Query<any, T>> {
+    async findOneAsync(
+        filter: FilterQuery<T>,
+        select?: string | string[] | {[feildname: string]: any},
+        options?: QueryOptions
+    ): Promise<T>{
         try{
-            return await this.model.findById(id);
+            return await this._model.findOne(filter, select, options).lean();
         }catch(err) {
-            this.throwMongoError(err);
+            this.throwMongooseError(err);
         }
     }
 
-    async findOne(filter = {}): Promise<Query<any, T>> {
+    async findAsync(
+        filter: FilterQuery<T> = {},
+        select?: string | string[] | {[feildname: string]: any},
+        options?: QueryOptions
+    ): Promise<T[]>{
         try{
-            return await this.model.findOne(filter);
-        }catch(err) {
-            this.throwMongoError(err);
-        }
-    }
-    async create(data: any): Promise<EnforceDocument<T, any>> {
-        try{
-            return await this.model.create(data);
+            return await this._model.find(filter, select, options).lean();
         }catch(err){
-            this.throwMongoError(err);
-        } 
-    }
-
-    async updateOne(data: any, filter = {}): Promise<Query<any, T>> {
-        try{
-            return await this.model.findOneAndUpdate(filter, data);
-        }catch(err) {
-            this.throwMongoError(err);
+            this.throwMongooseError(err);
         }
     }
 
-    async updateOneById(data: any, id: string): Promise<Query<any, T>> {
-        try{
-            return await this.model.findByIdAndUpdate(id, data);
+    findById(
+        id: string | Types.ObjectId,
+        select?: string | string[] | {[feildname: string]: any},
+        options?: QueryOptions
+    ): Query<T, {}> {
+        try {
+            return this._model.findById(id, select, options);
         }catch(err) {
-            this.throwMongoError(err);
+            this.throwMongooseError(err);
         }
     }
 
-    async updateAll(filter = {}, data: any): Promise<Query<any, T>> {
+    findOne(
+        filter: FilterQuery<T>,
+        select?: string | string[] | {[feildname: string]: any},
+        options?: QueryOptions
+    ): Query<T, {}> {
         try{
-            return await this.model.updateMany(filter, data);
+            return this._model.findOne(filter, select, options);
         }catch(err){
-            this.throwMongoError(err);
+            this.throwMongooseError(err);
         }
     }
-
-    async deleteOne(filter = {}): Promise<any>
-    {
+    
+    find(
+        filter: FilterQuery<T> = {},
+        select?: string | string[] | {[feildname: string]: any},
+        options?: QueryOptions
+    ): Query<T[], {}> {
         try{
-            return await this.model.deleteOne(filter);
-        }catch(err){
-            this.throwMongoError(err);
-        }
-    }
-
-    async deleteOneById(id: string): Promise<any> {
-        try{
-            return await this.model.findByIdAndDelete(id);
+            return this._model.find(filter, select, options);
         }catch(err) {
-            this.throwMongoError(err);
+            this.throwMongooseError(err);
+        }
+    }
+
+    create<M>(data: M): Promise<T> {
+        try{
+            return this._model.create(data);
+        }catch(err) {
+            this.throwMongooseError(err);
+        }
+    }
+
+    createMany<M>(
+        data: M[],
+        options: SaveOptions
+    ): Promise<T[]>{
+        try{
+            return this._model.create(data, options);
+        }catch(err) {
+            this.throwMongooseError(err)
+        }
+    }
+
+    async updateByIdAsync(
+        id: string | Types.ObjectId,
+        data: UpdateQuery<T>,
+        options?: QueryOptions
+    ): Promise<T> {
+        try{
+            return await this._model.findByIdAndUpdate(id, data, options).lean();
+        }catch(err){
+            this.throwMongooseError(err);
+        }
+    }
+
+    async updateOne(
+        filter: FilterQuery<T>,
+        update: UpdateQuery<T>,
+        options?: QueryOptions
+    ): Promise<UpdateWriteOpResult>{
+        try{
+            return await this._model.updateOne(filter, update, options); 
+        }catch(err){
+            this.throwMongooseError(err);
+        }
+    }
+
+    async updateMany(
+        filter: FilterQuery<T>,
+        update: UpdateQuery<T>,
+        options?: QueryOptions
+    ): Promise<UpdateWriteOpResult>{
+        try{
+            return await this._model.updateMany(filter, update, options);
+        }catch(err) {
+            this.throwMongooseError(err);
+        }
+    }
+
+    updateById(
+        id: string,
+        data: UpdateQuery<T>,
+        options?: QueryOptions
+    ): Query<T, {}> {
+        try{
+            return this._model.findByIdAndUpdate(id, data, options);
+        }catch(err) {
+            this.throwMongooseError(err);
+        }
+    }
+
+    async deleteByIdAsync(
+        id: string,
+        options?: QueryOptions
+    ): Promise<T>{
+        try{
+            return await this._model.findByIdAndDelete(id, options).lean();
+        }catch(err) {
+            this.throwMongooseError(err);
+        }
+    }
+
+    async deleteOne(
+        filter: FilterQuery<T>,
+        options?: QueryOptions
+    ): Promise<DeleteResult>{
+        try{
+            return await this._model.deleteOne(filter, options);
+        }catch(err) {
+            this.throwMongooseError(err);
+        }
+    }
+
+    async deleteMany(
+        filter: FilterQuery<T>,
+        options?: QueryOptions
+    ): Promise<DeleteResult>{
+        try{
+            return await this._model.deleteMany(filter, options);
+        }catch(err){
+            this.throwMongooseError(err);
+        }
+    }
+    
+    deleteById(
+        id: string,
+        options?: QueryOptions
+    ): Query<T, {}> {
+        try{
+            return this._model.findByIdAndDelete(id, options);
+        }catch(err){
+            this.throwMongooseError(err);
         }
     }
 }

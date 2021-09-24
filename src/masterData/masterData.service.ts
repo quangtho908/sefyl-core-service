@@ -13,7 +13,7 @@ export class MasterDataService extends BaseService<MasterDataDocument>{
     ){ super(model); }
 
     async getData(lang: string, id: string): Promise<ResModel> {
-        const data = await this.findById(id);
+        const data = await this.findByIdAsync(id);
         if(!data) throw new NotFoundException(`${id} is in valid`);
         return {statusCode: 200, data: data[lang], message: "Your data is found"};
     }
@@ -24,12 +24,12 @@ export class MasterDataService extends BaseService<MasterDataDocument>{
     }
 
     async updateData(data: DataDto, id: string): Promise<ResModel> {
-        await this.updateOneById(data, id);
+        await this.updateByIdAsync(id, data);
         return {statusCode: 201, message: "Your data is updated"}
     }
 
     async deleteData(id: string): Promise<ResModel> {
-        await this.deleteOneById(id);
+        await this.deleteByIdAsync(id);
         return {statusCode: 201, message: "Your data is deleted"}
     }
 }

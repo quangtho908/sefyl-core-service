@@ -2,7 +2,7 @@ import { Injectable, NotAcceptableException, NotFoundException } from "@nestjs/c
 import { InjectModel } from "@nestjs/mongoose";
 import { compare, genSalt, hash } from "bcrypt";
 import { Model } from "mongoose";
-import { env } from "src/shared/enviroment/enviroment";
+import { auth } from "src/shared/enviroment/enviroment";
 import { ResModel } from "src/shared/base.model";
 import { BaseService } from "src/shared/base.service";
 import { CreateUserDto, GetUserDto, UpdateUserDto } from "./user.dto";
@@ -16,12 +16,14 @@ export class UserService extends BaseService<UserDocument>{
     ) { super(userModel) }
 
     async getUser(username: string): Promise<ResModel> {
-        const data: GetUserDto = await this.findOne({username});
+        const data: GetUserDto = await this.findOneAsync(
+            {username},
+            "name, email, datejoin, website, location, bio, skills, work, education"
+        );
         if(!data) throw new NotFoundException();
-        const { name, email, datejoin, website, location, bio, skills, work, education } = data
         return {
             statusCode: 200, 
-            data: { name, email, datejoin, website, location, bio, skills, work, education },
+            data,
             message: `${username} is found`
         }
     }
@@ -35,23 +37,23 @@ export class UserService extends BaseService<UserDocument>{
     }
 
     async update(id: string, data: UpdateUserDto): Promise<ResModel> {
-        await this.updateOneById(data, id);
+        await this.updateByIdAsync(id, data);
         return {statusCode: 201, message: "Hey your account is updated"};
     }
 
     async updatePwd(id: string, newPassword: string) {
         const newHash: string = await this.bcryptPassword(newPassword);
-        await this.updateOneById({hash: newHash}, id);
+        await this.updateByIdAsync(id, {hash: newHash});
         return {statusCode: 2001, message: "Your password is updated"}
     }
 
     async delete(id: string,): Promise<ResModel> {
-        await this.deleteOneById(id);
+        await this.deleteByIdAsync(id);
         return {statusCode: 200, message: "Hey your account is deleted"};
     }
 
     async bcryptPassword(password: string): Promise<string> {
-        const salt: string = await genSalt(env.auth.salt);
+        const salt: string = await genSalt(auth.salt);
         const newHash: string = await hash(password, salt);
         return newHash;
     }
